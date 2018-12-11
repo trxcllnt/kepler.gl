@@ -69,6 +69,17 @@ export default class IconLayer extends Layer {
     super(props);
 
     this.registerVisConfig(pointVisConfigs);
+    this._visualChannels = {
+      color: {
+        ...this._visualChannels.color
+      },
+      size: {
+        ...this._visualChannels.size,
+        range: 'radiusRange',
+        property: 'radius',
+        channelScaleType: 'radius'
+      }
+    };
     this.getPosition = memoize(iconPosAccessor, iconPosResolver);
     this.getIcon = memoize(iconAccessor, iconResolver);
   }
@@ -89,17 +100,17 @@ export default class IconLayer extends Layer {
     return IconLayerIcon;
   }
 
-  get visualChannels() {
-    return {
-      ...super.visualChannels,
-      size: {
-        ...super.visualChannels.size,
-        range: 'radiusRange',
-        property: 'radius',
-        channelScaleType: 'radius'
-      }
-    };
-  }
+  // get visualChannels() {
+  //   return {
+  //     ...super.visualChannels,
+  //     size: {
+  //       ...super.visualChannels.size,
+  //       range: 'radiusRange',
+  //       property: 'radius',
+  //       channelScaleType: 'radius'
+  //     }
+  //   };
+  // }
 
   get layerInfoModal() {
     return {

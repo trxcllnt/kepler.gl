@@ -60,6 +60,19 @@ export default class PointLayer extends Layer {
     this.registerVisConfig(pointVisConfigs);
     this.getPosition = memoize(pointPosAccessor, pointPosResolver);
     this.getText = memoize(pointLabelAccessor, pointLabelResolver);
+
+    // console.log(super);
+    this._visualChannels = {
+      color: {
+        ...this._visualChannels.color
+      },
+      size: {
+        ...this._visualChannels.size,
+        range: 'radiusRange',
+        property: 'radius',
+        channelScaleType: 'radius'
+      }
+    };
   }
 
   get type() {
@@ -89,17 +102,17 @@ export default class PointLayer extends Layer {
     return [...super.noneLayerDataAffectingProps, 'radius'];
   }
 
-  get visualChannels() {
-    return {
-      ...super.visualChannels,
-      size: {
-        ...super.visualChannels.size,
-        range: 'radiusRange',
-        property: 'radius',
-        channelScaleType: 'radius'
-      }
-    };
-  }
+  // get visualChannels() {
+  //   return {
+  //     ...super.visualChannels,
+  //     size: {
+  //       ...super.visualChannels.size,
+  //       range: 'radiusRange',
+  //       property: 'radius',
+  //       channelScaleType: 'radius'
+  //     }
+  //   };
+  // }
 
   static findDefaultLayerProps({fieldPairs = []}) {
     const props = [];

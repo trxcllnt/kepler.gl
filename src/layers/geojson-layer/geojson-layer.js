@@ -71,12 +71,103 @@ const defaultDataAccessor = d => d.data;
 const nullValueColor = [0, 0, 0, 0];
 const nullValueSize = 0;
 
+
+// kepler.gl uses constantValue(this.config) to return new value in updateTriggers
+// when constantValue(this.config returns an accessor function, shallow equal will be false
+// to avoid updating the entire buffer, we check config.color has changed or not,
+// if not return the same accessor function
+const getFillColorConstant = memoize(config => d => d.properties.fillColor || config.color, config => config.color);
+const constantValueAccessors = {
+  fillColor: {
+    accessor: config => d => d.properties.fillColor || config.color,
+    resolver: config => config.color
+  },
+  strokeColor: {
+    accessor: config => d => d.properties.lineColor || config.visConfig.strokeColor || config.color,
+    resolver: config => `${config.strokeColor}${config.color}`
+  }
+};
+
+const getSizeConstant = d => d.properties.lineWidth || 1;
+const getHeightConstant = d => d.properties.elevation || 500;
+const getRadiusConstant = d => d.properties.radius || 1;
+
+const visualChannels = {
+  fillColor: {
+    property: 'fill color',
+    field: 'colorField',
+    scale: 'colorScale',
+    domain: 'colorDomain',
+    range: 'colorRange',
+    key: 'fillColor',
+    channelScaleType: CHANNEL_SCALES.color,
+    condition: config => config.visConfig.filled,
+    accessor: 'getFillColor',
+    nullValue: nullValueColor,
+    // constantValue: config => d => d.properties.fillColor || config.color
+    constantValue: null
+  },
+  strokeColor: {
+    property: 'stroke color',
+    field: 'strokeColorField',
+    scale: 'strokeColorScale',
+    domain: 'strokeColorDomain',
+    range: 'strokeColorRange',
+    key: 'strokeColor',
+    channelScaleType: CHANNEL_SCALES.color,
+    condition: config => config.visConfig.stroked,
+    accessor: 'getLineColor',
+    nullValue: nullValueColor,
+    // constantValue: config => d => d.properties.lineColor || config.visConfig.strokeColor || config.color
+    constantValue: null
+  },
+  size: {
+    property: 'stroke',
+    field: 'sizeField',
+    scale: 'sizeScale',
+    domain: 'sizeDomain',
+    range: 'sizeRange',
+    key: 'size',
+    channelScaleType: CHANNEL_SCALES.size,
+    condition: config => config.visConfig.stroked,
+    accessor: 'getLineWidth',
+    nullValue: nullValueSize,
+    constantValue: config => getSizeConstant
+  },
+  height: {
+    property: 'height',
+    field: 'heightField',
+    scale: 'heightScale',
+    domain: 'heightDomain',
+    range: 'heightRange',
+    key: 'height',
+    channelScaleType: 'size',
+    condition: config => config.visConfig.enable3d,
+    accessor: 'getElevation',
+    nullValue: nullValueSize,
+    constantValue: config => getHeightConstant
+  },
+  radius: {
+    property: 'radius',
+    field: 'radiusField',
+    scale: 'radiusScale',
+    domain: 'radiusDomain',
+    range: 'radiusRange',
+    key: 'radius',
+    channelScaleType: 'radius',
+    accessor: 'getRadius',
+    nullValue: nullValueSize,
+    constantValue: config => getRadiusConstant
+  }
+};
+
 export default class GeoJsonLayer extends Layer {
   constructor(props) {
     super(props);
 
     this.dataToFeature = {};
     this.registerVisConfig(geojsonVisConfigs);
+    this._visualChannels = this.initiateVisualChannels();
     this.getFeature = memoize(featureAccessor, featureResolver);
   }
 
@@ -94,75 +185,6 @@ export default class GeoJsonLayer extends Layer {
 
   get requiredLayerColumns() {
     return geoJsonRequiredColumns;
-  }
-
-  get visualChannels() {
-    return {
-      fillColor: {
-        property: 'fill color',
-        field: 'colorField',
-        scale: 'colorScale',
-        domain: 'colorDomain',
-        range: 'colorRange',
-        key: 'fillColor',
-        channelScaleType: CHANNEL_SCALES.color,
-        condition: config => config.visConfig.filled,
-        accessor: 'getFillColor',
-        nullValue: nullValueColor,
-        defaultValue: (d, config) => d.properties.fillColor || config.color
-      },
-      strokeColor: {
-        property: 'stroke color',
-        field: 'strokeColorField',
-        scale: 'strokeColorScale',
-        domain: 'strokeColorDomain',
-        range: 'strokeColorRange',
-        key: 'strokeColor',
-        channelScaleType: CHANNEL_SCALES.color,
-        condition: config => config.visConfig.stroked,
-        accessor: 'getLineColor',
-        nullValue: nullValueColor,
-        defaultValue: (d, config) => d.properties.lineColor || config.visConfig.strokeColor || config.color
-      },
-      size: {
-        property: 'stroke',
-        field: 'sizeField',
-        scale: 'sizeScale',
-        domain: 'sizeDomain',
-        range: 'sizeRange',
-        key: 'size',
-        channelScaleType: CHANNEL_SCALES.size,
-        condition: config => config.visConfig.stroked,
-        accessor: 'getLineWidth',
-        nullValue: nullValueSize,
-        defaultValue: (d, config) => d.properties.lineWidth || 1
-      },
-      height: {
-        property: 'height',
-        field: 'heightField',
-        scale: 'heightScale',
-        domain: 'heightDomain',
-        range: 'heightRange',
-        key: 'height',
-        channelScaleType: 'size',
-        condition: config => config.visConfig.enable3d,
-        accessor: 'getElevation',
-        nullValue: nullValueSize,
-        defaultValue: (d, config) => d.properties.elevation || 500
-      },
-      radius: {
-        property: 'radius',
-        field: 'radiusField',
-        scale: 'radiusScale',
-        domain: 'radiusDomain',
-        range: 'radiusRange',
-        key: 'radius',
-        channelScaleType: 'radius',
-        accessor: 'getRadius',
-        nullValue: nullValueSize,
-        defaultValue: (d, config) => d.properties.radius || 1
-      }
-    };
   }
 
   static findDefaultLayerProps({label, fields}) {
@@ -207,6 +229,22 @@ export default class GeoJsonLayer extends Layer {
     };
   }
 
+  initiateVisualChannels() {
+    const constantValues = Object.keys(constantValueAccessors).reduce((accu, key) => ({
+      ...accu,
+      [key]: memoize(constantValueAccessors[key].accessor, constantValueAccessors[key].resolver)
+    }), {});
+    const merged = Object.keys(visualChannels).reduce((accu, key) => ({
+      ...accu,
+      [key]: constantValues[key] ? {
+        ...visualChannels[key],
+        constantValue: constantValues[key]
+      } : visualChannels[key]
+    }), {});
+
+    console.log(merged);
+    return merged;
+  }
   getHoverData(object, allData) {
     // index of allData is saved to feature.properties
     return allData[object.properties.index];
@@ -238,7 +276,9 @@ export default class GeoJsonLayer extends Layer {
     const attributeAccessors = {};
 
     for (let key in this.visualChannels) {
-      const {condition, field, scale, domain, range, accessor, defaultValue, nullValue, channelScaleType} = this.visualChannels[key];
+      const {condition, field, scale, domain, range, accessor, constantValue,
+        nullValue, channelScaleType} = this.visualChannels[key];
+
       const disabled = condition && !condition(this.config);
 
       const scaleFunction = this.config[field] && !disabled &&
@@ -251,18 +291,67 @@ export default class GeoJsonLayer extends Layer {
           this.config.visConfig[range].colors.map(hexToRgb) : this.config.visConfig[range]
         );
 
-      attributeAccessors[accessor] = d => scaleFunction ?
+      attributeAccessors[accessor] = scaleFunction ? d =>
+        // return an accessor function
         this.getEncodedChannelValue(
           scaleFunction,
           dataAccessor(d),
           this.config[field],
           nullValue
         )
-        : typeof defaultValue === 'function' ?
-        defaultValue(d, this.config) : defaultValue
+        // return a constant
+        : typeof constantValue === 'function' ?
+        constantValue(this.config) : constantValue
     }
 
     return attributeAccessors;
+  }
+
+  getUpdateTriggers(data) {
+    const updateTriggers = {};
+    console.log('getUpdateTriggers')
+    for (let key in this.visualChannels) {
+      if (this.visualChannels.hasOwnProperty(key)) {
+        const {accessor, field, scale, range, domain, constantValue} = this.visualChannels[key];
+
+        updateTriggers[accessor] = {
+          [field]: this.config[field],
+          [scale]: this.config[scale],
+          [range]: this.config[range],
+          [domain]: this.config[domain],
+          constant: typeof constantValue === 'function' ? constantValue(this.config) : constantValue
+        };
+      }
+    }
+
+    return updateTriggers;
+    // const updateTriggers = {
+    //   getElevation: {
+    //     heightField: this.config.heightField,
+    //     heightScale: this.config.heightScale,
+    //     heightRange: visConfig.heightRange
+    //   },
+    //   getFillColor: {
+    //     color: this.config.color,
+    //     colorField: this.config.colorField,
+    //     colorRange: visConfig.colorRange,
+    //     colorScale: this.config.colorScale
+    //   },
+    //   getLineColor: {
+    //     color: visConfig.strokeColor || this.config.color,
+    //     colorField: this.config.strokeColorField,
+    //     colorRange: visConfig.strokeColorRange,
+    //     colorScale: this.config.strokeColorScale
+    //   },
+    //   getLineWidth: {
+    //     sizeField: this.config.sizeField,
+    //     sizeRange: visConfig.sizeRange
+    //   },
+    //   getRadius: {
+    //     radiusField: this.config.radiusField,
+    //     radiusRange: visConfig.radiusRange
+    //   }
+    // };
   }
 
   formatLayerData(_, allData, filteredIndex, oldLayerData, opt = {}) {

@@ -75,6 +75,26 @@ function* generateColor() {
 
 const colorMaker = generateColor();
 const defaultGetFieldValue = (field, d) => d[field.tableFieldIndex - 1];
+const defaultVisualChannels = {
+  color: {
+    property: 'color',
+    field: 'colorField',
+    scale: 'colorScale',
+    domain: 'colorDomain',
+    range: 'colorRange',
+    key: 'color',
+    channelScaleType: CHANNEL_SCALES.color
+  },
+  size: {
+    property: 'size',
+    field: 'sizeField',
+    scale: 'sizeScale',
+    domain: 'sizeDomain',
+    range: 'sizeRange',
+    key: 'size',
+    channelScaleType: CHANNEL_SCALES.size
+  }
+};
 
 export default class Layer {
   constructor(props = {}) {
@@ -85,6 +105,9 @@ export default class Layer {
 
     // visConfigSettings
     this.visConfigSettings = {};
+
+    // visualChannels
+    this._visualChannels = defaultVisualChannels;
 
     this.config = this.getDefaultLayerConfig({
       columns: this.getLayerColumns(),
@@ -125,26 +148,7 @@ export default class Layer {
   }
 
   get visualChannels() {
-    return {
-      color: {
-        property: 'color',
-        field: 'colorField',
-        scale: 'colorScale',
-        domain: 'colorDomain',
-        range: 'colorRange',
-        key: 'color',
-        channelScaleType: CHANNEL_SCALES.color
-      },
-      size: {
-        property: 'size',
-        field: 'sizeField',
-        scale: 'sizeScale',
-        domain: 'sizeDomain',
-        range: 'sizeRange',
-        key: 'size',
-        channelScaleType: CHANNEL_SCALES.size
-      }
-    };
+    return this._visualChannels;
   }
 
   /*

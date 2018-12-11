@@ -40,11 +40,37 @@ const aggrResolver = (field, aggregation) => `${field.name}-${aggregation}`;
 const getLayerColorRange = colorRange => colorRange.colors.map(hexToRgb);
 
 export const aggregateRequiredColumns = ['lat', 'lng'];
+export const aggregationVisualChannels = {
+  color: {
+    aggregation: 'colorAggregation',
+    channelScaleType: CHANNEL_SCALES.colorAggr,
+    defaultMeasure: 'Point Count',
+    domain: 'colorDomain',
+    field: 'colorField',
+    key: 'color',
+    property: 'color',
+    range: 'colorRange',
+    scale: 'colorScale'
+  },
+  size: {
+    aggregation: 'sizeAggregation',
+    channelScaleType: CHANNEL_SCALES.sizeAggr,
+    condition: config => config.visConfig.enable3d,
+    defaultMeasure: 'Point Count',
+    domain: 'sizeDomain',
+    field: 'sizeField',
+    key: 'size',
+    property: 'height',
+    range: 'sizeRange',
+    scale: 'sizeScale'
+  }
+};
 
 export default class AggregationLayer extends Layer {
   constructor(props) {
     super(props);
 
+    this._visualChannels = aggregationVisualChannels;
     this.getPosition = memoize(pointPosAccessor, pointPosResolver);
     this.getColorValue = memoize(getValueAggr, aggrResolver);
     this.getColorRange = memoize(getLayerColorRange);
@@ -80,33 +106,33 @@ export default class AggregationLayer extends Layer {
     ];
   }
 
-  get visualChannels() {
-    return {
-      color: {
-        aggregation: 'colorAggregation',
-        channelScaleType: CHANNEL_SCALES.colorAggr,
-        defaultMeasure: 'Point Count',
-        domain: 'colorDomain',
-        field: 'colorField',
-        key: 'color',
-        property: 'color',
-        range: 'colorRange',
-        scale: 'colorScale'
-      },
-      size: {
-        aggregation: 'sizeAggregation',
-        channelScaleType: CHANNEL_SCALES.sizeAggr,
-        condition: config => config.visConfig.enable3d,
-        defaultMeasure: 'Point Count',
-        domain: 'sizeDomain',
-        field: 'sizeField',
-        key: 'size',
-        property: 'height',
-        range: 'sizeRange',
-        scale: 'sizeScale'
-      }
-    };
-  }
+  // get visualChannels() {
+  //   return {
+  //     color: {
+  //       aggregation: 'colorAggregation',
+  //       channelScaleType: CHANNEL_SCALES.colorAggr,
+  //       defaultMeasure: 'Point Count',
+  //       domain: 'colorDomain',
+  //       field: 'colorField',
+  //       key: 'color',
+  //       property: 'color',
+  //       range: 'colorRange',
+  //       scale: 'colorScale'
+  //     },
+  //     size: {
+  //       aggregation: 'sizeAggregation',
+  //       channelScaleType: CHANNEL_SCALES.sizeAggr,
+  //       condition: config => config.visConfig.enable3d,
+  //       defaultMeasure: 'Point Count',
+  //       domain: 'sizeDomain',
+  //       field: 'sizeField',
+  //       key: 'size',
+  //       property: 'height',
+  //       range: 'sizeRange',
+  //       scale: 'sizeScale'
+  //     }
+  //   };
+  // }
 
   /**
    * Get the description of a visualChannel config

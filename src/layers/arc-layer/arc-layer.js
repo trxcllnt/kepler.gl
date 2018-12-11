@@ -54,6 +54,15 @@ export default class ArcLayer extends Layer {
     super(props);
     this.registerVisConfig(arctVisConfigs);
     this.getPosition = memoize(arcPosAccessor, arcPosResolver);
+    this._visualChannels = {
+      color: {
+        ...this._visualChannels.color,
+      },
+      size: {
+        ...this._visualChannels.size,
+        property: 'stroke'
+      }
+    };
   }
 
   get type() {
@@ -76,15 +85,15 @@ export default class ArcLayer extends Layer {
     return this.defaultLinkColumnPairs;
   }
 
-  get visualChannels() {
-    return {
-      ...super.visualChannels,
-      size: {
-        ...super.visualChannels.size,
-        property: 'stroke'
-      }
-    };
-  }
+  // get visualChannels() {
+  //   return {
+  //     ...super.visualChannels,
+  //     size: {
+  //       ...super.visualChannels.size,
+  //       property: 'stroke'
+  //     }
+  //   };
+  // }
 
   static findDefaultLayerProps({fieldPairs = []}) {
     if (fieldPairs.length < 2) {

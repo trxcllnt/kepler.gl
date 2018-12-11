@@ -32,10 +32,25 @@ export const clusterVisConfigs = {
   colorAggregation: 'aggregation'
 };
 
+const visualChannels = {
+  color: {
+    aggregation: 'colorAggregation',
+    channelScaleType: CHANNEL_SCALES.colorAggr,
+    defaultMeasure: 'Point Count',
+    domain: 'colorDomain',
+    field: 'colorField',
+    key: 'color',
+    property: 'color',
+    range: 'colorRange',
+    scale: 'colorScale'
+  }
+};
+
 export default class ClusterLayer extends AggregationLayer {
   constructor(props) {
     super(props);
     this.registerVisConfig(clusterVisConfigs);
+    this._visualChannels = visualChannels;
   }
 
   get type() {
@@ -46,21 +61,21 @@ export default class ClusterLayer extends AggregationLayer {
     return ClusterLayerIcon;
   }
 
-  get visualChannels() {
-    return {
-      color: {
-        aggregation: 'colorAggregation',
-        channelScaleType: CHANNEL_SCALES.colorAggr,
-        defaultMeasure: 'Point Count',
-        domain: 'colorDomain',
-        field: 'colorField',
-        key: 'color',
-        property: 'color',
-        range: 'colorRange',
-        scale: 'colorScale'
-      }
-    };
-  }
+  // get visualChannels() {
+  //   return {
+  //     color: {
+  //       aggregation: 'colorAggregation',
+  //       channelScaleType: CHANNEL_SCALES.colorAggr,
+  //       defaultMeasure: 'Point Count',
+  //       domain: 'colorDomain',
+  //       field: 'colorField',
+  //       key: 'color',
+  //       property: 'color',
+  //       range: 'colorRange',
+  //       scale: 'colorScale'
+  //     }
+  //   };
+  // }
 
   renderLayer({
     data,

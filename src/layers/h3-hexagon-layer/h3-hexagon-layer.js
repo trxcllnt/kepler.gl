@@ -60,6 +60,24 @@ export default class HexagonIdLayer extends Layer {
     super(props);
     this.registerVisConfig(HexagonIdVisConfigs);
     this.getHexId = memoize(hexIdAccessor, hexIdResolver);
+    this._visualChannels = {
+      color: {
+        ...this._visualChannels.color
+      },
+      size: {
+        ...this._visualChannels.size,
+        property: 'height'
+      },
+      coverage: {
+        property: 'coverage',
+        field: 'coverageField',
+        scale: 'coverageScale',
+        domain: 'coverageDomain',
+        range: 'coverageRange',
+        key: 'coverage',
+        channelScaleType: CHANNEL_SCALES.radius
+      }
+    };
   }
 
   get type() {
@@ -79,24 +97,24 @@ export default class HexagonIdLayer extends Layer {
     return H3HexagonLayerIcon;
   }
 
-  get visualChannels() {
-    return {
-      ...super.visualChannels,
-      size: {
-        ...super.visualChannels.size,
-        property: 'height'
-      },
-      coverage: {
-        property: 'coverage',
-        field: 'coverageField',
-        scale: 'coverageScale',
-        domain: 'coverageDomain',
-        range: 'coverageRange',
-        key: 'coverage',
-        channelScaleType: CHANNEL_SCALES.radius
-      }
-    };
-  }
+  // get visualChannels() {
+  //   return {
+  //     ...super.visualChannels,
+  //     size: {
+  //       ...super.visualChannels.size,
+  //       property: 'height'
+  //     },
+  //     coverage: {
+  //       property: 'coverage',
+  //       field: 'coverageField',
+  //       scale: 'coverageScale',
+  //       domain: 'coverageDomain',
+  //       range: 'coverageRange',
+  //       key: 'coverage',
+  //       channelScaleType: CHANNEL_SCALES.radius
+  //     }
+  //   };
+  // }
 
   static findDefaultLayerProps({fields}) {
     const foundColumns = this.findDefaultColumnField(HEXAGON_ID_FIELDS, fields);
