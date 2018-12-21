@@ -27,6 +27,7 @@ import {createAction} from 'redux-actions';
 import {addDataToMap, wrapTo} from 'kepler.gl/actions';
 import sampleData from './data/sample-data';
 import config from './configurations/config.json';
+import {csv} from 'd3-request';
 
 const MAPBOX_TOKEN = process.env.MapboxAccessToken; // eslint-disable-line
 

@@ -464,7 +464,7 @@ export default class LayerConfigurator extends Component {
       <StyledLayerVisualConfigurator>
         {/* Color By */}
         <LayerConfigGroup
-          {...layer.visConfigSettings.filled}
+          {...featureTypes.point ? {label: 'color'} : layer.visConfigSettings.filled}
           {...visConfiguratorProps}>
 
           {/* Fill Color */}
@@ -475,7 +475,7 @@ export default class LayerConfigurator extends Component {
           )}
 
           <ChannelByValueSelector
-            channel={layer.visualChannels.fillColor}
+            channel={layer.visualChannels.color}
             {...layerChannelConfigProps}
           />
           <VisConfigSlider
@@ -535,7 +535,6 @@ export default class LayerConfigurator extends Component {
         ) : null}
 
         {/* Radius */}
-
         {featureTypes.point ? (
           <RadiusConfigGroup
             channel={layer.visualChannels.radius}

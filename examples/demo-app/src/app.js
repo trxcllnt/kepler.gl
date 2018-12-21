@@ -38,6 +38,7 @@ const MAPBOX_TOKEN = process.env.MapboxAccessToken; // eslint-disable-line
 /* eslint-disable no-unused-vars */
 import sampleTripData from './data/sample-trip-data';
 import sampleGeojson from './data/sample-small-geojson.json';
+import sampleGeojsonPoints from './data/sample-geojson-points.json';
 import sampleH3Data from './data/sample-hex-id-csv';
 import sampleIconCsv, {config as savedMapConfig} from './data/sample-icon-csv';
 import {updateVisData, addDataToMap} from 'kepler.gl/actions';
@@ -185,8 +186,8 @@ class App extends Component {
     // load geojson
     this.props.dispatch(
       updateVisData({
-        info: {label: 'SF Zip Geo'},
-        data: Processors.processGeojson(sampleGeojson)
+        info: {label: 'Bart Stops Geo'},
+        data: Processors.processGeojson(sampleGeojsonPoints)
       })
     );
   }

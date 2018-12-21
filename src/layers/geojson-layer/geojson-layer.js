@@ -76,9 +76,9 @@ const nullValueSize = 0;
 // when constantValue(this.config returns an accessor function, shallow equal will be false
 // to avoid updating the entire buffer, we check config.color has changed or not,
 // if not return the same accessor function
-const getFillColorConstant = memoize(config => d => d.properties.fillColor || config.color, config => config.color);
+// const getFillColorConstant = memoize(config => d => d.properties.fillColor || config.color, config => config.color);
 const constantValueAccessors = {
-  fillColor: {
+  color: {
     accessor: config => d => d.properties.fillColor || config.color,
     resolver: config => config.color
   },
@@ -93,18 +93,17 @@ const getHeightConstant = d => d.properties.elevation || 500;
 const getRadiusConstant = d => d.properties.radius || 1;
 
 const visualChannels = {
-  fillColor: {
+  color: {
     property: 'fill color',
     field: 'colorField',
     scale: 'colorScale',
     domain: 'colorDomain',
     range: 'colorRange',
-    key: 'fillColor',
+    key: 'color',
     channelScaleType: CHANNEL_SCALES.color,
     condition: config => config.visConfig.filled,
     accessor: 'getFillColor',
     nullValue: nullValueColor,
-    // constantValue: config => d => d.properties.fillColor || config.color
     constantValue: null
   },
   strokeColor: {
@@ -118,7 +117,6 @@ const visualChannels = {
     condition: config => config.visConfig.stroked,
     accessor: 'getLineColor',
     nullValue: nullValueColor,
-    // constantValue: config => d => d.properties.lineColor || config.visConfig.strokeColor || config.color
     constantValue: null
   },
   size: {
@@ -242,9 +240,9 @@ export default class GeoJsonLayer extends Layer {
       } : visualChannels[key]
     }), {});
 
-    console.log(merged);
     return merged;
   }
+
   getHoverData(object, allData) {
     // index of allData is saved to feature.properties
     return allData[object.properties.index];
@@ -278,7 +276,6 @@ export default class GeoJsonLayer extends Layer {
     for (let key in this.visualChannels) {
       const {condition, field, scale, domain, range, accessor, constantValue,
         nullValue, channelScaleType} = this.visualChannels[key];
-
       const disabled = condition && !condition(this.config);
 
       const scaleFunction = this.config[field] && !disabled &&
@@ -307,9 +304,8 @@ export default class GeoJsonLayer extends Layer {
     return attributeAccessors;
   }
 
-  getUpdateTriggers(data) {
+  getUpdateTriggers() {
     const updateTriggers = {};
-    console.log('getUpdateTriggers')
     for (let key in this.visualChannels) {
       if (this.visualChannels.hasOwnProperty(key)) {
         const {accessor, field, scale, range, domain, constantValue} = this.visualChannels[key];
@@ -445,33 +441,35 @@ export default class GeoJsonLayer extends Layer {
       lineMiterLimit: 4
     };
 
-    const updateTriggers = {
-      getElevation: {
-        heightField: this.config.heightField,
-        heightScale: this.config.heightScale,
-        heightRange: visConfig.heightRange
-      },
-      getFillColor: {
-        color: this.config.color,
-        colorField: this.config.colorField,
-        colorRange: visConfig.colorRange,
-        colorScale: this.config.colorScale
-      },
-      getLineColor: {
-        color: visConfig.strokeColor || this.config.color,
-        colorField: this.config.strokeColorField,
-        colorRange: visConfig.strokeColorRange,
-        colorScale: this.config.strokeColorScale
-      },
-      getLineWidth: {
-        sizeField: this.config.sizeField,
-        sizeRange: visConfig.sizeRange
-      },
-      getRadius: {
-        radiusField: this.config.radiusField,
-        radiusRange: visConfig.radiusRange
-      }
-    };
+    const updateTriggers = this.getUpdateTriggers();
+    // console.log(updateTriggers)
+    // const updateTriggers = {
+    //   getElevation: {
+    //     heightField: this.config.heightField,
+    //     heightScale: this.config.heightScale,
+    //     heightRange: visConfig.heightRange
+    //   },
+    //   getFillColor: {
+    //     color: this.config.color,
+    //     colorField: this.config.colorField,
+    //     colorRange: visConfig.colorRange,
+    //     colorScale: this.config.colorScale
+    //   },
+    //   getLineColor: {
+    //     color: visConfig.strokeColor || this.config.color,
+    //     colorField: this.config.strokeColorField,
+    //     colorRange: visConfig.strokeColorRange,
+    //     colorScale: this.config.strokeColorScale
+    //   },
+    //   getLineWidth: {
+    //     sizeField: this.config.sizeField,
+    //     sizeRange: visConfig.sizeRange
+    //   },
+    //   getRadius: {
+    //     radiusField: this.config.radiusField,
+    //     radiusRange: visConfig.radiusRange
+    //   }
+    // };
 
     return [
       new DeckGLGeoJsonLayer({

@@ -276,7 +276,7 @@ export const LAYER_VIS_CONFIGS = {
   filled: {
     type: 'boolean',
     label: 'Polygon Fill',
-    defaultValue: false,
+    defaultValue: true,
     group: PROPERTY_GROUPS.display,
     property: 'filled'
   },
