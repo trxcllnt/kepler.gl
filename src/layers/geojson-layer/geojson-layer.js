@@ -248,7 +248,12 @@ export default class GeoJsonLayer extends Layer {
     return allData[object.properties.index];
   }
 
-  shouldCalculateDeckLayerData(oldLayerData, opt, getFeature) {
+  shouldCalculateDeckLayerData(oldLayerData, opt, geometryAccessors) {
+    // geometryAccessors is accessors that returns position, feature, hexId
+    // change to geometryAccessors will result in regenerate the entire layer data array
+    if (!oldLayerData || !oldLayerData.data) {
+      return true;
+    }
     return oldLayerData &&
       opt.sameData &&
       oldLayerData.getFeature === getFeature &&
@@ -261,12 +266,22 @@ export default class GeoJsonLayer extends Layer {
       .filter(d => d);
   }
 
-  shouldUpdateLayerMeta(oldLayerData, getFeature) {
-    return !oldLayerData || oldLayerData.getFeature !== getFeature;
+  shouldUpdateLayerMeta(oldLayerData, geometryAccessors) {
+    if (!oldLayerData) {
+      return true;
+    }
+
+    for (let key in geometryAccessors) {
+      if (oldLayerData[key] !== geometryAccessors[key]) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**
-   * Mapping from visual channels to deck.gl accesors
+   * Mapping from visual channels to deck.gl attribute accesors
    * @param {Function} dataAccessor - access kepler.gl layer data from deck.gl layer
    * @return {Object} attributeAccessors - deck.gl layer attribute accessors
    */
@@ -282,7 +297,7 @@ export default class GeoJsonLayer extends Layer {
         this.getVisChannelScale(
           this.config[scale],
           this.config[domain],
-          // for color, have to convert from hex to rgb
+          // convert from hex to rgb if color
           // TODO: Shan refactor to remove this code
           channelScaleType ===  CHANNEL_SCALES.color ?
           this.config.visConfig[range].colors.map(hexToRgb) : this.config.visConfig[range]
@@ -321,55 +336,35 @@ export default class GeoJsonLayer extends Layer {
     }
 
     return updateTriggers;
-    // const updateTriggers = {
-    //   getElevation: {
-    //     heightField: this.config.heightField,
-    //     heightScale: this.config.heightScale,
-    //     heightRange: visConfig.heightRange
-    //   },
-    //   getFillColor: {
-    //     color: this.config.color,
-    //     colorField: this.config.colorField,
-    //     colorRange: visConfig.colorRange,
-    //     colorScale: this.config.colorScale
-    //   },
-    //   getLineColor: {
-    //     color: visConfig.strokeColor || this.config.color,
-    //     colorField: this.config.strokeColorField,
-    //     colorRange: visConfig.strokeColorRange,
-    //     colorScale: this.config.strokeColorScale
-    //   },
-    //   getLineWidth: {
-    //     sizeField: this.config.sizeField,
-    //     sizeRange: visConfig.sizeRange
-    //   },
-    //   getRadius: {
-    //     radiusField: this.config.radiusField,
-    //     radiusRange: visConfig.radiusRange
-    //   }
-    // };
+  }
+
+  getGeometryAccessors() {
+    return {
+      getFeature: this.getFeature(this.config.columns)
+    };
   }
 
   formatLayerData(_, allData, filteredIndex, oldLayerData, opt = {}) {
-    const {columns} = this.config;
-    const getFeature = this.getFeature(columns);
+    // const {columns} = this.config;
+    // const getFeature = this.getFeature(columns);
+    const geometryAccessors = this.getGeometryAccessors();
 
     // geojson feature are object, if doesn't exists
     // create it and save to layer
-    if (this.shouldUpdateLayerMeta(oldLayerData, getFeature)) {
-      this.updateLayerMeta(allData, getFeature);
+    if (this.shouldUpdateLayerMeta(oldLayerData, geometryAccessors)) {
+      this.updateLayerMeta(allData, geometryAccessors);
     }
 
-    let geojsonData;
-    const carryoverOldData = this.shouldCalculateDeckLayerData(oldLayerData, opt, getFeature);
+    let layerData;
+    const carryoverOldData = this.shouldCalculateDeckLayerData(oldLayerData, opt, geometryAccessors);
     if (carryoverOldData) {
       // no need to create a new array of data
       // use updateTriggers to selectively re-calculate attributes
-      geojsonData = carryoverOldData;
+      layerData = carryoverOldData;
     } else {
       // filteredIndex is a reference of index in allData which can map to feature
       // here we create a new array of data, this will cause all deck.gl attributes being invalidated
-      geojsonData = this.calculateDeckLayerData(_, allData, filteredIndex, this.dataToFeature)
+      layerData = this.calculateDeckLayerData(_, allData, filteredIndex, this.dataToFeature)
     }
 
     // access keplergl layer data from deck.gl layer
@@ -378,13 +373,13 @@ export default class GeoJsonLayer extends Layer {
     const accessors = this.getAtributeAccessors(dataAccessor)
 
     return {
-      data: geojsonData,
+      data: layerData,
       getFeature,
       ...accessors
     };
   }
 
-  updateLayerMeta(allData, getFeature) {
+  updateLayerMeta(allData, {getFeature}) {
     this.dataToFeature = getGeojsonDataMaps(allData, getFeature);
 
     // calculate layer meta
@@ -442,34 +437,6 @@ export default class GeoJsonLayer extends Layer {
     };
 
     const updateTriggers = this.getUpdateTriggers();
-    // console.log(updateTriggers)
-    // const updateTriggers = {
-    //   getElevation: {
-    //     heightField: this.config.heightField,
-    //     heightScale: this.config.heightScale,
-    //     heightRange: visConfig.heightRange
-    //   },
-    //   getFillColor: {
-    //     color: this.config.color,
-    //     colorField: this.config.colorField,
-    //     colorRange: visConfig.colorRange,
-    //     colorScale: this.config.colorScale
-    //   },
-    //   getLineColor: {
-    //     color: visConfig.strokeColor || this.config.color,
-    //     colorField: this.config.strokeColorField,
-    //     colorRange: visConfig.strokeColorRange,
-    //     colorScale: this.config.strokeColorScale
-    //   },
-    //   getLineWidth: {
-    //     sizeField: this.config.sizeField,
-    //     sizeRange: visConfig.sizeRange
-    //   },
-    //   getRadius: {
-    //     radiusField: this.config.radiusField,
-    //     radiusRange: visConfig.radiusRange
-    //   }
-    // };
 
     return [
       new DeckGLGeoJsonLayer({

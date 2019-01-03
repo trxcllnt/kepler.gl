@@ -100,18 +100,6 @@ export default class IconLayer extends Layer {
     return IconLayerIcon;
   }
 
-  // get visualChannels() {
-  //   return {
-  //     ...super.visualChannels,
-  //     size: {
-  //       ...super.visualChannels.size,
-  //       range: 'radiusRange',
-  //       property: 'radius',
-  //       channelScaleType: 'radius'
-  //     }
-  //   };
-  // }
-
   get layerInfoModal() {
     return {
       id: 'iconInfo',

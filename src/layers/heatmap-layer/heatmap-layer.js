@@ -93,23 +93,6 @@ class HeatmapLayer extends MapboxGLLayer {
     return 'heatmap';
   }
 
-  // get visualChannels() {
-  //   return {
-  //     weight: {
-  //       property: 'weight',
-  //       field: 'weightField',
-  //       scale: 'weightScale',
-  //       domain: 'weightDomain',
-  //       key: 'weight',
-  //       // supportedFieldTypes can be determined by channelScaleType
-  //       // or specified here
-  //       defaultMeasure: 'density',
-  //       supportedFieldTypes: [ALL_FIELD_TYPES.real, ALL_FIELD_TYPES.integer],
-  //       channelScaleType: CHANNEL_SCALES.size
-  //     }
-  //   };
-  // }
-
   get layerIcon() {
     return HeatmapLayerIcon;
   }

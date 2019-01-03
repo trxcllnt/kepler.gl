@@ -396,6 +396,19 @@ export default class Layer {
     return Math.pow(2, Math.max(8 - zoom + zoomOffset, 0));
   }
 
+  /**
+   * Should invalidate all data and recalculate deck layer data
+   * @param {*} oldLayerData
+   * @param {*} opt
+   * @param {*} getFeature
+   */
+  shouldCalculateDeckLayerData(oldLayerData, opt, getFeature) {
+    return oldLayerData &&
+      opt.sameData &&
+      oldLayerData.getFeature === getFeature &&
+      oldLayerData.data;
+  }
+
   formatLayerData(data, allData, filteredIndex) {
     return {};
   }

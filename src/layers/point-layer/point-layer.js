@@ -61,7 +61,6 @@ export default class PointLayer extends Layer {
     this.getPosition = memoize(pointPosAccessor, pointPosResolver);
     this.getText = memoize(pointLabelAccessor, pointLabelResolver);
 
-    // console.log(super);
     this._visualChannels = {
       color: {
         ...this._visualChannels.color
@@ -102,18 +101,6 @@ export default class PointLayer extends Layer {
     return [...super.noneLayerDataAffectingProps, 'radius'];
   }
 
-  // get visualChannels() {
-  //   return {
-  //     ...super.visualChannels,
-  //     size: {
-  //       ...super.visualChannels.size,
-  //       range: 'radiusRange',
-  //       property: 'radius',
-  //       channelScaleType: 'radius'
-  //     }
-  //   };
-  // }
-
   static findDefaultLayerProps({fieldPairs = []}) {
     const props = [];
 
@@ -138,7 +125,6 @@ export default class PointLayer extends Layer {
         prop.isVisible = true;
       }
 
-      // const newLayer = new KeplerGlLayers.PointLayer(prop);
       prop.columns = {
         lat: latField,
         lng: lngField,
@@ -149,6 +135,24 @@ export default class PointLayer extends Layer {
     });
 
     return props;
+  }
+
+  calculateDeckLayerData(data, allData, filteredIndex) {
+    return filteredIndex.reduce((accu, index) => {
+      const pos = getPosition({data: allData[index]});
+
+      // if doesn't have point lat or lng, do not add the point
+      // deck.gl can't handle position = null
+      if (!pos.every(Number.isFinite)) {
+        return accu;
+      }
+
+      accu.push({
+        data: allData[index]
+      });
+
+      return accu;
+    }, []);
   }
 
   formatLayerData(_, allData, filteredIndex, oldLayerData, opt = {}) {
