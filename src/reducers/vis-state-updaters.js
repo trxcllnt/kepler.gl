@@ -861,11 +861,13 @@ export const resetMapConfigVisStateUpdater = (state) => ({
  * @param {Object} state `visState`
  * @param {Object} action action
  * @param {Object} action.payload map config to be propagated
+ * @param {Object} action.payload.visState visState config to be propagated
+ * @param {Object} action.payload.option {keepExistingConfig: true | false}
  * @returns {Object} nextState
  * @public
  */
-export const receiveMapConfigUpdater = (state, action) => {
-  if (!action.payload.visState) {
+export const receiveMapConfigUpdater = (state, {payload: {visState, options = {}}}) => {
+  if (!visState) {
     return state;
   }
 
@@ -875,10 +877,12 @@ export const receiveMapConfigUpdater = (state, action) => {
     interactionConfig,
     layerBlending,
     splitMaps
-  } = action.payload.visState;
+  } = visState;
 
-  // always reset config when receive a new config
-  const resetState = resetMapConfigVisStateUpdater(state);
+  const {keepExistingConfig} = options;
+
+  // reset config if keepExistingConfig is falsy
+  const resetState = !keepExistingConfig ? resetMapConfigVisStateUpdater(state) : state;
   let mergedState = {
     ...resetState,
     splitMaps: splitMaps || [] // maps doesn't require any logic
@@ -1086,7 +1090,7 @@ export const toggleLayerForMapUpdater = (state, action) => {
  * @param {Array<Object>} action.datasets.data.fields - ***required** Array of fields,
  * @param {string} action.datasets.data.fields.name - ***required** Name of the field,
  * @param {Array<Array>} action.datasets.data.rows - ***required** Array of rows, in a tabular format with `fields` and `rows`
- * @param {Object} action.options option object `{centerMap: true}`
+ * @param {Object} action.options option object `{centerMap: true, keepExistingConfig: false}`
  * @param {Object} action.config map config
  * @returns {Object} nextState
  * @public
@@ -1094,14 +1098,15 @@ export const toggleLayerForMapUpdater = (state, action) => {
 /* eslint-disable max-statements */
 export const updateVisDataUpdater = (state, action) => {
   // datasets can be a single data entries or an array of multiple data entries
+  const {config, options} = action;
   const datasets = Array.isArray(action.datasets)
     ? action.datasets
     : [action.datasets];
 
-  if (action.config) {
+  if (config) {
     // apply config if passed from action
     state = receiveMapConfigUpdater(state, {
-      payload: {visState: action.config}
+      payload: {visState: config, options}
     });
   }
 
