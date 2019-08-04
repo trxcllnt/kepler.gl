@@ -18,11 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import test from 'tape';
 import keplerGlReducer from 'reducers';
 import {addDataToMapUpdater} from 'reducers/combined-updaters';
-import {keplerGlInit} from 'actions/actions';
-import {coreReducerFactory} from 'reducers/core';
 import {registerEntry} from 'actions/identity-actions';
 
 const mockRawData = {
@@ -56,7 +53,7 @@ const mockRawData = {
   ]
 };
 
-test('#composerStateReducer - addDataToMapUpdater: mapStyle', t => {
+it('#composerStateReducer - addDataToMapUpdater: mapStyle', () => {
   // init kepler.gl root and instance
   const state = keplerGlReducer(undefined, registerEntry({id: 'test'})).test;
 
@@ -77,12 +74,10 @@ test('#composerStateReducer - addDataToMapUpdater: mapStyle', t => {
     }
   });
 
-  t.equal(newState.mapStyle.styleType, 'light', 'Map style is set correctly');
-
-  t.end();
+  expect(newState.mapStyle.styleType).toBe('light');
 });
 
-test('#composerStateReducer - addDataToMapUpdater: mapState should not be centered', t => {
+it('#composerStateReducer - addDataToMapUpdater: mapState should not be centered', () => {
   // init kepler.gl root and instance
   const state = keplerGlReducer({}, registerEntry({id: 'test'})).test;
   const mapStateProperties = {
@@ -106,8 +101,6 @@ test('#composerStateReducer - addDataToMapUpdater: mapState should not be center
     }
   });
 
-  t.equal(newState.mapState.latitude, mapStateProperties.latitude, 'mapstate latitude is set correctly');
-  t.equal(newState.mapState.longitude, mapStateProperties.longitude, 'mapstate longitude is set correctly');
-
-  t.end()
+  expect(newState.mapState.latitude).toBe(mapStateProperties.latitude);
+  expect(newState.mapState.longitude).toBe(mapStateProperties.longitude);
 });
